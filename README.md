@@ -265,9 +265,13 @@ Debug builds of Little Fridge talk to `http://<your-mac>.local:8787` on a device
 Release builds use the deployed server.
 
 ### 5. Deploy
-`render.yaml` deploys the server to [Render](https://render.com). Set `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`,
-`PAYPAL_WEBHOOK_ID` and `ORGANIZER_VENMO` in the Render dashboard, then register a PayPal webhook for
-`https://<your-service>.onrender.com/webhooks/paypal`.
+`render.yaml` deploys the server to [Render](https://render.com) (Starter $7/month plan with 1GB persistent disk at `/var/data`):
+- **Hosting Credits**: $50 hackathon hosting credit claimed via `credits.render.com/claim/paypal-ai-hackathon` covers the $7/month compute and persistent disk plan for ~6 months, reliably running through the PayPal AI Hackathon judging period (December 1–15, 2026).
+- **Environment Configuration**: Configure the 8 production environment variables in the Render dashboard:
+  - Primary PayPal app: `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`, `PAYPAL_BN_CODE`
+  - Secondary PayPal app (Penny autonomous copilot): `ALT_CLIENT_ID`, `ALT_CLIENT_SECRET`, `ALT_BN_CODE`
+  - Merchant & security keys: `ORGANIZER_MERCHANT_ID`, `SPLIT_APP_KEY`
+- **Live Webhooks**: Register live PayPal webhooks for instant split settlement notifications at `https://little-fridge-split.onrender.com/webhooks/paypal`.
 
 ---
 
