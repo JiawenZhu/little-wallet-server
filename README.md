@@ -21,26 +21,26 @@ friend-facing settle-up page; the iOS screens live in the Little Fridge app.
 ## 📸 Visual Showcase
 
 <div align="center">
-  <img src="docs/images/banner.png" width="95%" alt="Little Fridge Split: split the bill in the app, friends pay back with Venmo or PayPal" />
+  <img src="docs/images/banner.png" width="95%" alt="Little Wallet Server: split a bill in Little Wallet, friends pay back with Venmo or PayPal" />
 </div>
 
 <br/>
 
-### 📱 The Whole Flow (iPhone 17 simulator, Oct 27, 2026)
+### 📱 The Whole Flow (Little Wallet on the iPhone 17 simulator, Nov 9, 2026)
 
-| 1. Bought with Apple Pay | 2. Pick What You Share | 3. Who Had What? |
+| 1. Every Payment in One Place | 2. Open the Payment | 3. Who's Sharing? |
 | :---: | :---: | :---: |
-| <img src="docs/images/01-fridge.png" width="280" alt="Fridge filtered to today's Apple Pay food, with split badges" /> | <img src="docs/images/02-pick.png" width="280" alt="Pile fan in select mode with one item checked" /> | <img src="docs/images/03-split.png" width="280" alt="Split sheet: you, Sam and Kate, $3.61 each" /> |
-| **Apple Pay food, by day, week or month** | **Photos-style picking inside a pile** | **Exact shares, down to the cent** |
+| <img src="docs/images/01-home.png" width="280" alt="Little Wallet home: November spending by category, cards and Ask Penny" /> | <img src="docs/images/02-payment.png" width="280" alt="Trader Joe's payment, $21.65 with Apple Pay, three items" /> | <img src="docs/images/03-split.png" width="280" alt="Split the bill: you, Anna and David, $7.22, $7.22 and $7.21" /> |
+| **Spending by category, card and day** | **Items, card and receipt on one screen** | **Even or by item, exact to the cent** |
 
-| 4. One Link Per Friend | 5. They Pay Back | 6. Settle Up |
+| 4. One Link Per Friend | 5. They Pay Back | 6. Paid, Live |
 | :---: | :---: | :---: |
-| <img src="docs/images/04-links.png" width="280" alt="Payment links with Request in Messages buttons" /> | <img src="docs/images/05-pay.png" width="280" alt="Kate's settle-up page with Venmo and PayPal buttons" /> | <img src="docs/images/06-settle.png" width="280" alt="Settle up: Sam owes $14.43, Kate settled" /> |
-| **Request in Messages, or copy the link** | **Only their items, one big Venmo button** | **Who owes you, who paid, one-tap nudge** |
+| <img src="docs/images/04-links.png" width="280" alt="Payment links for Anna and David with Request in Messages buttons" /> | <img src="docs/images/05-pay.png" width="280" alt="Anna's pay page on little-wallet.onrender.com with Venmo and PayPal buttons" /> | <img src="docs/images/06-paid.png" width="280" alt="Payment links: Anna paid with Venmo, $7.22 of $14.43 back" /> |
+| **Request in Messages, or copy the link** | **Their share, one Venmo or PayPal button** | **The app updates the moment they pay** |
 
-<sub>Every screen is a real capture of the current build and of this server running locally with PayPal sandbox. The
-Apple Pay purchase came from the app's "Simulate Apple Pay Tap" button, and Kate's Apple Cash payment was marked by
-hand; no real money moved.</sub>
+<sub>Every screen is a real capture of the current Little Wallet build with demo data and the simulator's sample
+contacts (Anna Haro, David Taylor). The pay page in step 5 is served by the live Render deployment in PayPal sandbox.
+Anna's payment in step 6 was sent with the server's sandbox-only test route, so no real money moved.</sub>
 
 ---
 
@@ -69,7 +69,7 @@ hand; no real money moved.</sub>
   draws. Apple has no API to prefill an Apple Cash amount, so the text tells your friend to tap + → Apple Cash.
 
 <div align="center">
-  <img src="docs/images/receipt-card.png" width="320" alt="The receipt card attached to a Messages request: Kate's share $3.61" />
+  <img src="docs/images/receipt-card.png" width="320" alt="The Little Wallet receipt card attached to a Messages request: Anna's share $7.22" />
 </div>
 
 ### 4. 🤝 Settle Up
@@ -241,8 +241,8 @@ organizer is the app's own sandbox merchant.
 
 ### 1. Clone and configure
 ```bash
-git clone https://github.com/JiawenZhu/little-fridge-split.git
-cd little-fridge-split
+git clone https://github.com/JiawenZhu/little-wallet-server.git
+cd little-wallet-server
 cp .env.example .env
 ```
 Fill in `PAYPAL_CLIENT_ID` and `PAYPAL_CLIENT_SECRET` from your sandbox app. Leave `ORGANIZER_MERCHANT_ID` empty to pay
@@ -271,7 +271,7 @@ Release builds use the deployed server.
   - Primary PayPal app: `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`, `PAYPAL_BN_CODE`
   - Secondary PayPal app (Penny autonomous copilot): `ALT_CLIENT_ID`, `ALT_CLIENT_SECRET`, `ALT_BN_CODE`
   - Merchant & security keys: `ORGANIZER_MERCHANT_ID`, `SPLIT_APP_KEY`
-- **Live Webhooks**: Register live PayPal webhooks for instant split settlement notifications at `https://little-fridge-split.onrender.com/webhooks/paypal`.
+- **Live Webhooks**: Register live PayPal webhooks for instant split settlement notifications at `https://little-wallet.onrender.com/webhooks/paypal`.
 
 ---
 
