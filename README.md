@@ -1,4 +1,4 @@
-# 🧊 Little Fridge Split 💸
+# 👛 Little Wallet Server 💸
 
 [![Node](https://img.shields.io/badge/Node-22%2B-339933?style=flat&logo=node.js&logoColor=white)](https://nodejs.org)
 [![PayPal](https://img.shields.io/badge/PayPal-Orders%20v2-003087?style=flat&logo=paypal&logoColor=white)](https://developer.paypal.com/docs/api/orders/v2/)
