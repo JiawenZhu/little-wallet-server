@@ -21,7 +21,7 @@ friend-facing settle-up page; the iOS screens live in the Little Fridge app.
 ## 📸 Visual Showcase
 
 <div align="center">
-  <img src="docs/images/banner.png" width="95%" alt="Little Wallet Server: split a bill in Little Wallet, friends pay back with Venmo or PayPal" />
+  <img src="docs/images/banner.png" width="95%" alt="Little Wallet: split a bill in the app, friends pay back with Venmo or PayPal" />
 </div>
 
 <br/>
