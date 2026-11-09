@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createSplitServer } from "../server/index.js";
 
-const repo = new URL("../", import.meta.url).pathname;
+const repo = decodeURIComponent(new URL("../", import.meta.url).pathname);
 
 test("orders pay the organizer, use server amounts, and only matching captures mark a share paid", async () => {
   const root = await mkdtemp(join(tmpdir(), "lf-split-"));

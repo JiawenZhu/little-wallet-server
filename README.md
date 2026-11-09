@@ -1,27 +1,33 @@
 # 👛 Little Wallet Server 💸
 
 [![Node](https://img.shields.io/badge/Node-22%2B-339933?style=flat&logo=node.js&logoColor=white)](https://nodejs.org)
-[![PayPal](https://img.shields.io/badge/PayPal-Orders%20v2-003087?style=flat&logo=paypal&logoColor=white)](https://developer.paypal.com/docs/api/orders/v2/)
+[![PayPal](https://img.shields.io/badge/PayPal-Orders%20%7C%20Invoicing%20%7C%20Payouts-003087?style=flat&logo=paypal&logoColor=white)](https://developer.paypal.com/api/rest/)
 [![Venmo](https://img.shields.io/badge/Venmo-via%20PayPal%20JS%20SDK-008CFF?style=flat&logo=venmo&logoColor=white)](https://developer.paypal.com/docs/checkout/pay-with-venmo/)
 [![Apple Cash](https://img.shields.io/badge/Apple%20Cash-in%20Messages-000000?style=flat&logo=apple&logoColor=white)](https://support.apple.com/apple-cash)
-[![Tests](https://img.shields.io/badge/Tests-5%20server%20%2B%2073%20app%20passing-success?style=flat&logo=checkmarx)](#-verification--test-results)
+[![Render](https://img.shields.io/badge/Live%20on-Render-46E3B7?style=flat&logo=render&logoColor=black)](https://little-wallet.onrender.com/s/demo-sam)
+[![Tests](https://img.shields.io/badge/Tests-15%20server%20%2B%2075%20app%20passing-success?style=flat&logo=checkmarx)](#-verification--test-results)
 [![Hackathon](https://img.shields.io/badge/PayPal%20AI%20Hackathon-2026-0070E0?style=flat&logo=devpost&logoColor=white)](https://paypalaihackathon.devpost.com/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-> **Little Fridge Split** turns a grocery receipt into "you owe me" links that actually get paid. You tap Apple Pay at the
-> store, and [Little Fridge](https://little-fridge-2026.web.app) already knows what's in the bag. Pick what you're
-> sharing, tap who had what, and each friend gets a link with **only their items** and a big **Venmo** button, or a text
-> they can pay with **Apple Cash** right in Messages. The money goes straight to you. Little Fridge never holds it.
+> **Little Wallet** keeps every payment you make in one calm place: Apple Pay taps, receipts you scan, things you say
+> or type. When a payment was shared, split it in a tap. Each friend gets a link with **only their share** and a big
+> **Venmo** or **PayPal** button, or a text they can pay with **Apple Cash** right in Messages. The money goes straight
+> to you, and the app shows **Paid** the moment it lands. Little Wallet never holds it.
 
-Built for the [PayPal AI Hackathon](https://paypalaihackathon.devpost.com/). This repo is the payment server and the
-friend-facing settle-up page; the iOS screens live in the Little Fridge app.
+This repo is the payment server behind those links: the friend's pay page, PayPal Orders, webhooks, the live line to
+the phone, PayPal activity, and the PayPal actions Penny (the app's money helper) can take once you confirm them.
+The iOS app is [JiawenZhu/little-wallet](https://github.com/JiawenZhu/little-wallet). Built for the
+[PayPal AI Hackathon](https://paypalaihackathon.devpost.com/).
+
+**Try a pay link:** [little-wallet.onrender.com/s/demo-sam](https://little-wallet.onrender.com/s/demo-sam) (PayPal
+sandbox, so no real money moves).
 
 ---
 
 ## 📸 Visual Showcase
 
 <div align="center">
-  <img src="docs/images/banner.png" width="95%" alt="Little Wallet: split a bill in the app, friends pay back with Venmo or PayPal" />
+  <img src="docs/images/little-wallet-banner.png" width="95%" alt="Little Wallet: split a bill in the app, friends pay back with Venmo, PayPal or Apple Cash" />
 </div>
 
 <br/>
@@ -46,39 +52,52 @@ Anna's payment in step 6 was sent with the server's sandbox-only test route, so 
 
 ## 🌟 Key Features
 
-### 1. 🛒 From the Receipt, Not From Memory
-- **Apple Pay knows the shop**: a Shortcuts automation logs each Apple Pay grocery tap, and the items land in the fridge
-  with their store, date and price.
-- **Find last Saturday's shop fast**: filter the fridge to Apple Pay food, then by **Day · Week · Month**, stepping back
-  with ‹ › or a swipe.
-- **Never split twice**: food that's already split wears a small badge, orange while friends owe, a green check once
-  everyone has paid.
-
-### 2. ✂️ Split It Like You'd Explain It
-- **Pick like Photos**: open a pile, tap *Split bill*, and check the items you're sharing. One item skips the picking.
-- **Tap who had what**: everyone sharing an item splits it evenly; "You keep" shows your own share.
+### 1. ✂️ Split Any Payment
+- **From any payment in the wallet**: an Apple Pay tap, a scanned receipt, a payment you said or typed. Open it and tap
+  *Split the bill*.
+- **Evenly or by item**: everyone pays the same, or each person pays for what they had. "You keep" shows your share.
 - **Fair to the cent**: shares are computed in integer cents with largest-remainder rounding, and tax is spread in
   proportion to what each person bought, so the shares always add up to the receipt.
+- **The server decides the amounts**: the app sends the split once; every share and every PayPal order amount is
+  computed here, never taken from a browser.
 
-### 3. 💸 Getting Paid Back
-- **Venmo first**: each friend's page has a **Venmo** button and a **PayPal** button from the PayPal JS SDK
-  (`enable-funding=venmo`), backed by **PayPal Orders v2**.
-- **A free fallback**: when PayPal can't offer Venmo on a phone, the page shows a big *Pay in the Venmo app* button
-  (`venmo://paycharge`) addressed to the organizer's Venmo handle, with the amount and note filled in.
+### 2. 💸 Getting Paid Back
+- **One link per friend** (`/s/<token>`): their share, their items, and who paid. Random tokens, and each page shows
+  only that friend's part.
+- **Venmo and PayPal buttons** from the PayPal JS SDK (`enable-funding=venmo`), backed by **PayPal Orders v2**. The
+  order carries the Little Wallet name, and the friend's statement reads **LITTLE WALLET**.
+- **A free Venmo fallback**: when PayPal can't offer Venmo on a phone, the page shows *Pay in the Venmo app*
+  (`venmo://paycharge`) addressed to your Venmo handle, with the amount and note filled in.
 - **Apple Cash in Messages**: *Request in Messages* opens a text with the amount, the link, and a receipt card the app
   draws. Apple has no API to prefill an Apple Cash amount, so the text tells your friend to tap + → Apple Cash.
 
 <div align="center">
-  <img src="docs/images/receipt-card.png" width="320" alt="The Little Wallet receipt card attached to a Messages request: Anna's share $7.22" />
+  <img src="docs/images/little-wallet-receipt-card.png" width="320" alt="The Little Wallet receipt card attached to a Messages request: Anna's share $7.22" />
 </div>
 
-### 4. 🤝 Settle Up
-- **A third face on the fridge card**: Fridge → Spending → **Settle up**, with three animated dots.
-- **At a glance**: what you're owed, how much has come back, and each person's balance, biggest first.
-- **Status you can trust**: each share moves *Requested → Opened → Paid*, and a PayPal capture or webhook marks it paid.
-  Apple Cash and free Venmo payments are marked by hand, and the phone keeps that mark even after the server refreshes.
-- **Friendly nudges**: the bell drafts one reminder for everything a friend owes, grouping splits from the same shop and
-  day ("Trader Joe's (Oct 27, 3 splits)").
+### 3. ⚡ Paid, Live
+- **Webhooks**: `PAYMENT.CAPTURE.COMPLETED` and `INVOICING.INVOICE.PAID` are checked with PayPal's signature
+  verification, then the share is marked paid, even if the friend closed the page.
+- **A live line to the phone**: Little Wallet keeps one Server-Sent Events request open (`GET /api/events`). When a
+  friend pays, the share turns **Paid** and the app shows "Anna paid you $7.22" within seconds.
+- **Only the app may listen**: the stream and every app route need the `x-app-key` header.
+
+### 4. 📊 PayPal & Venmo Activity
+- **What came in and went out**: the app's PayPal & Venmo card reads your PayPal account through **Transaction
+  Search**, up to a year back, 31 days per request.
+- **Matched to your splits**: a friend's payment for a split arrives with that split's title and items; money you
+  sent shows as spending.
+
+### 5. 🤖 Penny's PayPal Actions (you confirm first)
+Penny, the money helper in Little Wallet, can draft PayPal actions. Nothing is sent until you tap to confirm on the
+phone; this server then calls PayPal:
+- **Invoices** (PayPal Invoicing v2): one per friend who still owes, emailed when there's an address.
+- **Refunds**: back to a friend, never more than they paid.
+- **Payouts**: to an email or phone; Venmo payouts go by phone number.
+
+### 6. 🏷️ Little Wallet Everywhere
+The pay page, the PayPal checkout name, the Venmo note and the bank-statement text all say Little Wallet. (Each split
+carries the app that made it, so a sister app can share this server without borrowing the name.)
 
 ---
 
@@ -86,53 +105,57 @@ Anna's payment in step 6 was sent with the server's sandbox-only test route, so 
 
 ```mermaid
 flowchart LR
-    subgraph App ["Little Fridge iOS app (SwiftUI)"]
-        A["ApplePayStore<br/>(Shortcuts → purchases)"]
-        B["SplitSheet<br/>(pick items, tap people)"]
-        C["SplitService<br/>(sent splits, status)"]
-        D["SettleUpPane<br/>(balances, nudges)"]
-        E["MessagesRequest<br/>(Messages + receipt card)"]
+    subgraph App ["Little Wallet iOS app (SwiftUI)"]
+        A["WalletStore<br/>(every payment)"]
+        B["SplitSheet<br/>(evenly or by item)"]
+        C["SplitService<br/>(splits, status, x-app-key)"]
+        D["LiveUpdates<br/>(SSE + watchdog)"]
+        E["MessagesRequest<br/>(text + receipt card)"]
+        P["Penny<br/>(confirm, then act)"]
     end
 
-    subgraph Server ["little-fridge-split (Node 22, no dependencies)"]
+    subgraph Server ["Little Wallet Server (Node 22, no dependencies)"]
         F["POST /api/splits<br/>shares in integer cents"]
-        G["GET /s/:token<br/>settle-up page"]
+        G["GET /s/:token<br/>pay page"]
         H["POST /api/shares/:token/order<br/>amount set by the server"]
         I["POST /api/shares/:token/capture"]
         J["POST /webhooks/paypal<br/>signature verified"]
-        S["GET /api/splits/:id<br/>who opened or paid"]
-        K[("data/store.json")]
+        V["GET /api/events<br/>live stream"]
+        Q["/api/paypal/*<br/>activity, invoices,<br/>refunds, payouts"]
+        K[("store.json<br/>on a Render disk")]
     end
 
     subgraph PayPal ["PayPal (sandbox)"]
         L["Orders v2"]
         M["JS SDK buttons<br/>Venmo · PayPal"]
         N["Webhooks"]
+        R["Transaction Search ·<br/>Invoicing · Payouts · Refunds"]
     end
 
     A --> B --> C
     C -- "create split" --> F
-    C -- "refresh status" --> S
-    C --> D
     C --> E
     E -- "text with link" --> G
     G --> M
     M --> H --> L
     M --> I --> L
     N --> J
-    F & H & I & J & S --> K
+    J -- "share.paid" --> V --> D
+    P --> Q --> R
+    F & H & I & J --> K
 ```
 
 ### How the money moves
 
 ```
-Friend's phone ── /s/<token> settle-up page ── Venmo / PayPal button (PayPal JS SDK, enable-funding=venmo)
+Friend's phone ── /s/<token> pay page ── Venmo / PayPal button (PayPal JS SDK, enable-funding=venmo)
                          │
-Backend (Node 22) ───────┤ POST /api/shares/:token/order    → PayPal Orders v2, amount set by the server
+Server (Node 22) ────────┤ POST /api/shares/:token/order    → PayPal Orders v2, amount set by the server
                          │ POST /api/shares/:token/capture  → capture, check amount + custom_id, mark paid once
                          │ POST /webhooks/paypal            → verify signature, mark paid even if the page was closed
+                         │ GET  /api/events                 → tell the phone right away
                          ▼
-Organizer's PayPal / Venmo balance          (free path: venmo://paycharge, or Apple Cash in Messages, marked by hand)
+Your PayPal / Venmo balance          (free paths: venmo://paycharge, or Apple Cash in Messages, marked by hand)
 ```
 
 - **The server sets every amount.** The browser only says which share it's paying.
@@ -154,58 +177,66 @@ exactly ([`server/split.js`](server/split.js)).
 
 ## 🔌 API
 
-| Method & path | What it does |
-| :--- | :--- |
-| `GET /api/config` | Public PayPal client ID and environment for the page (also the Render health check). |
-| `POST /api/splits` | The iOS app creates a split: people, lines, extras, organizer. Returns one share link per friend. |
-| `GET /api/splits/:id` | The app asks who has opened or paid. |
-| `GET /api/shares/:token` | A friend's share: their items, tax, total, organizer. Viewing it marks the share *opened*. |
-| `POST /api/shares/:token/order` | Creates a PayPal order for that share, with the amount taken from the server. |
-| `POST /api/shares/:token/capture` | Captures the approved order and marks the share paid if everything matches. |
-| `POST /webhooks/paypal` | Verifies PayPal's signature and marks the share paid on `PAYMENT.CAPTURE.COMPLETED`. |
-| `GET /s/:token` | The settle-up page itself (`web/settle.html`). |
+| Method & path | Who calls it | What it does |
+| :--- | :---: | :--- |
+| `GET /api/config` | pay page | Public PayPal client ID and environment (also Render's health check). |
+| `GET /s/:token` | friend | The pay page (`web/settle.html`). |
+| `GET /api/shares/:token` | pay page | A friend's share: items, tax, total, organizer, branding. Viewing marks it *opened*. |
+| `POST /api/shares/:token/order` | pay page | Creates a PayPal order with the amount taken from the server. |
+| `POST /api/shares/:token/capture` | pay page | Captures the approved order and marks the share paid if everything matches. |
+| `POST /webhooks/paypal` | PayPal | Verifies the signature; marks shares and invoices paid. |
+| `POST /api/splits` | app 🔑 | Creates a split: people, lines, extras, organizer. Returns one link per friend. |
+| `GET /api/splits/:id` | app 🔑 | Who has opened or paid. |
+| `GET /api/events` | app 🔑 | Server-Sent Events stream of `share.paid` and invoice events. |
+| `GET /api/paypal/activity` | app 🔑 | PayPal account activity (Transaction Search), newest first. |
+| `POST /api/paypal/invoices` | app 🔑 | Sends PayPal invoices Penny drafted and you confirmed. |
+| `POST /api/paypal/refunds` | app 🔑 | Refunds a capture, never more than was paid. |
+| `POST /api/paypal/payouts` | app 🔑 | Sends a payout to an email or phone (Venmo by phone). |
+| `POST /api/demo/paid` | app 🔑 | Sandbox only: sends a test "paid" event for demos. Off when `PAYPAL_ENV=live`. |
 
-Cross-site `POST` requests are refused (the `Origin` must match the host), except PayPal's webhook.
+🔑 needs the `x-app-key` header. Cross-site `POST` requests are refused (the `Origin` must match the host), except
+PayPal's webhook.
 
 ---
 
 ## 📁 Project Structure
 
 ```
-little-fridge-split/
+little-wallet-server/
 ├── README.md                     # This guide
 ├── LICENSE                       # MIT License
 ├── SPIKE.md                      # Day-1 findings: what PayPal sandbox allows
 ├── package.json                  # Node 22, zero runtime dependencies
-├── render.yaml                   # One-click Render deploy (secrets set in the dashboard)
+├── render.yaml                   # Render service: Starter plan + 1 GB disk (secrets set in the dashboard)
 ├── .env.example                  # Every setting the server reads
 │
 ├── server/
-│   ├── index.js                  # HTTP server, routes, webhook, static files
-│   ├── paypal.js                 # Orders v2, capture, webhook signature check
+│   ├── index.js                  # HTTP server, routes, webhooks, branding, static files
+│   ├── paypal.js                 # PayPal REST calls and webhook signature check
 │   ├── split.js                  # Integer-cent split math and Venmo links
-│   └── store.js                  # JSON-file storage (Firestore later)
+│   ├── store.js                  # JSON-file storage (on the Render disk in production)
+│   ├── events.js                 # Live Server-Sent Events line to the phone
+│   ├── activity.js               # PayPal Transaction Search, 31 days at a time
+│   ├── actions.js                # Penny's invoices, refunds and payouts
+│   └── register-webhook.mjs      # Points both PayPal apps' webhooks at a server
 │
 ├── web/
 │   ├── index.html                # Landing page
-│   ├── settle.html               # The friend's settle-up page
+│   ├── settle.html               # The friend's pay page
 │   ├── settle.js                 # PayPal / Venmo buttons and the Venmo-app fallback
-│   ├── style.css                 # Little Fridge look: paper, green, rounded
-│   └── img/                      # Food art shown next to each item
+│   ├── style.css                 # Little Wallet look: paper, green, rounded
+│   └── img/                      # Little Wallet mark and item art
 │
 ├── data/
-│   └── demo.json                 # Demo receipt behind /s/demo-sam
+│   └── demo.json                 # Demo split behind /s/demo-sam
 │
 ├── spike/                        # One-off sandbox scripts used for SPIKE.md
-├── tests/
-│   ├── split.test.mjs            # Split math and Venmo links
-│   └── server.test.mjs           # Orders, captures and webhooks against a mocked PayPal
-│
+├── tests/                        # node --test: split math, orders, webhooks, branding, live stream, activity, actions
 └── docs/images/                  # README banner and screenshots
 ```
 
-The iOS side (`SplitSheet.swift`, `SplitService.swift`, `SettleUpPane.swift`, `MessagesRequest.swift`,
-`FridgePeriod.swift`) lives in the Little Fridge app.
+The production copy of this server lives in [`backend/`](https://github.com/JiawenZhu/little-wallet/tree/main/backend)
+of the Little Wallet app repo, which is what Render deploys; this repo mirrors it.
 
 ---
 
@@ -213,23 +244,33 @@ The iOS side (`SplitSheet.swift`, `SplitService.swift`, `SettleUpPane.swift`, `M
 
 ```bash
 $ npm test
-# tests 5
-# pass 5
+# tests 15
+# pass 15
 # fail 0
 ```
 
-| Test | Where | What it proves |
-| :--- | :---: | :--- |
-| **spread always adds up to the total** | server | Largest-remainder rounding never loses or invents a cent. |
-| **shared items and tax split so shares equal the receipt** | server | Shared lines and proportional tax add up to the receipt. |
-| **unassigned items are rejected** | server | Every line needs at least one person. |
-| **Venmo link prefills recipient, amount and note** | server | The free `venmo://` and web links are built correctly. |
-| **orders pay the organizer, use server amounts, and only matching captures mark a share paid** | server | Amounts come from the server; captures and webhooks with the wrong amount or `custom_id` are ignored. |
-| **`SplitTests` + `FridgePeriodTests`** | iOS app | 73 app tests pass, including settle balances, Messages text, grouped nudges, matching prices and keeping hand-marked payments. |
+| Test | What it proves |
+| :--- | :--- |
+| **spread always adds up to the total** | Largest-remainder rounding never loses or invents a cent. |
+| **shared items and tax split so shares equal the receipt** | Shared lines and proportional tax add up to the receipt. |
+| **unassigned items are rejected** | Every line needs at least one person. |
+| **Venmo link prefills recipient, amount and note** | The free `venmo://` and web links are built correctly. |
+| **orders pay the organizer, use server amounts, and only matching captures mark a share paid** | Amounts come from the server; wrong amounts or `custom_id`s are ignored. |
+| **the pay page and PayPal show the app that made the split** | Little Wallet's name, logo and statement text (`LITTLE WALLET`). |
+| **splits survive a restart in DATA_DIR** | Links keep working after a deploy, from the Render disk. |
+| **a paid invoice reaches the phone's live stream, and only the app may listen** | Webhook → live event; no app key, no stream. |
+| **a friend's Venmo payment for a split comes in with its split, items and fee** | Activity is matched to the split it paid. |
+| **payments out are spending; holds, adjustments and denied payments are left out** | Activity shows only real money in and out. |
+| **long ranges are read 31 days at a time, every page, without repeats** | Transaction Search limits are respected. |
+| **an invoice is emailed when there's an address, and its link comes back** | Penny's invoices reach friends. |
+| **without an email the invoice isn't emailed; bad amounts are refused** | No surprise emails or broken invoices. |
+| **a refund can't be more than the payment** | Refunds are capped. |
+| **payouts go to emails or phones, Venmo by phone only** | Payout recipients are valid. |
 
-**Live sandbox results** are written up in [SPIKE.md](SPIKE.md): a Venmo payment to the app's own sandbox merchant was
-approved and captured end to end. Paying *another* merchant needs PayPal partner onboarding, so for the hackathon the
-organizer is the app's own sandbox merchant.
+The Little Wallet app has its own 75 passing tests (splits, receipts, reports, recurring bills, Penny's memory and
+actions, live updates). **Live checks on Render (Nov 9, 2026):** app routes refuse requests without the app key; a
+split made with it returns a `little-wallet.onrender.com` link; that page shows Little Wallet branding; and its PayPal
+sandbox order reads back with the statement text `LITTLE WALLET`.
 
 ---
 
@@ -237,7 +278,9 @@ organizer is the app's own sandbox merchant.
 
 ### Prerequisites
 - **Node.js** 22 or newer (no `npm install` needed: there are no runtime dependencies)
-- A **PayPal sandbox** REST app ([developer.paypal.com](https://developer.paypal.com)) and a sandbox personal account to pay with
+- A **PayPal sandbox** REST app ([developer.paypal.com](https://developer.paypal.com)) and a sandbox personal account to
+  pay with. A second sandbox app with Transaction Search turned on (`ALT_*`) powers activity, invoices, refunds and
+  payouts.
 
 ### 1. Clone and configure
 ```bash
@@ -245,8 +288,8 @@ git clone https://github.com/JiawenZhu/little-wallet-server.git
 cd little-wallet-server
 cp .env.example .env
 ```
-Fill in `PAYPAL_CLIENT_ID` and `PAYPAL_CLIENT_SECRET` from your sandbox app. Leave `ORGANIZER_MERCHANT_ID` empty to pay
-the account that owns the app.
+Fill in `PAYPAL_CLIENT_ID` and `PAYPAL_CLIENT_SECRET` from your sandbox app, and pick any long random `SPLIT_APP_KEY`
+(the app sends the same value). Leave `ORGANIZER_MERCHANT_ID` empty to pay the account that owns the app.
 
 ### 2. Run the tests
 ```bash
@@ -257,51 +300,54 @@ npm test
 ```bash
 npm run dev
 ```
-Open `http://localhost:8787/s/demo-sam` for Sam's share of the demo receipt. In sandbox, the Venmo button opens PayPal's
-"Venmo Sandbox" page; sign in with one of PayPal's documented Venmo sandbox test users, never a real Venmo account.
+Open `http://localhost:8787/s/demo-sam` for Sam's share of the demo split. In sandbox, the Venmo button opens PayPal's
+"Venmo Sandbox" page; sign in with one of PayPal's documented sandbox test users, never a real account.
 
-### 4. Connect the iPhone app
-Debug builds of Little Fridge talk to `http://<your-mac>.local:8787` on a device and `localhost:8787` in the simulator.
-Release builds use the deployed server.
+### 4. Connect Little Wallet
+In the [app repo](https://github.com/JiawenZhu/little-wallet), put the same key in `Config/Secrets.xcconfig` as
+`SPLIT_APP_KEY`. The simulator talks to `localhost:8787`; a real iPhone uses `https://little-wallet.onrender.com`.
 
-### 5. Deploy
-`render.yaml` deploys the server to [Render](https://render.com) (Starter $7/month plan with 1GB persistent disk at `/var/data`):
-- **Hosting Credits**: $50 hackathon hosting credit claimed via `credits.render.com/claim/paypal-ai-hackathon` covers the $7/month compute and persistent disk plan for ~6 months, reliably running through the PayPal AI Hackathon judging period (December 1–15, 2026).
-- **Environment Configuration**: Configure the 8 production environment variables in the Render dashboard:
-  - Primary PayPal app: `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`, `PAYPAL_BN_CODE`
-  - Secondary PayPal app (Penny autonomous copilot): `ALT_CLIENT_ID`, `ALT_CLIENT_SECRET`, `ALT_BN_CODE`
-  - Merchant & security keys: `ORGANIZER_MERCHANT_ID`, `SPLIT_APP_KEY`
-- **Live Webhooks**: Register live PayPal webhooks for instant split settlement notifications at `https://little-wallet.onrender.com/webhooks/paypal`.
+### 5. Deploy to Render
+The live service `little-wallet` runs on [Render](https://render.com): Starter plan ($7/month) with a 1 GB disk at
+`/var/data`, so saved splits and links survive deploys. The $50 PayPal AI Hackathon credit covers it through judging
+(December 1–15, 2026).
+- **Secrets** are set in the Render dashboard, never in Git: `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`,
+  `PAYPAL_BN_CODE`, `ALT_CLIENT_ID`, `ALT_CLIENT_SECRET`, `ALT_BN_CODE`, `ORGANIZER_MERCHANT_ID`, `SPLIT_APP_KEY`.
+- **Settings**: `PAYPAL_ENV=sandbox`, `DATA_DIR=/var/data`, `PUBLIC_URL=https://little-wallet.onrender.com`.
+- **Webhooks**: `node --env-file=.env server/register-webhook.mjs https://little-wallet.onrender.com` points both
+  PayPal apps at `/webhooks/paypal` and prints `PAYPAL_WEBHOOK_ID` and `ALT_WEBHOOK_ID` for the dashboard.
 
 ---
 
 ## 🗺️ Roadmap
 
-- [x] Settle-up page with Venmo and PayPal (Orders v2), server-set amounts, webhook-confirmed payments
-- [x] iOS: pick items, tap people, payment links, Messages + Apple Cash, Settle up, nudges
-- [ ] Deploy to Render and register the live webhook
-- [ ] **AI:** Claude reads the receipt photo and proposes who had what, with a reason for each item
-- [ ] **AI:** edit the split by talking ("Maya skips the beer")
-- [ ] **Agent:** reminders and formal PayPal invoices with the PayPal Agent Toolkit
-- [ ] Firestore instead of the JSON file, and Apple Pay on the settle-up page
+- [x] Pay page with Venmo and PayPal (Orders v2), server-set amounts, webhook-confirmed payments
+- [x] Little Wallet: split evenly or by item, payment links, Messages + Apple Cash receipt card
+- [x] Live "paid" updates on the phone (webhooks + Server-Sent Events)
+- [x] PayPal activity, and Penny's invoices, refunds and payouts with confirmation
+- [x] Deployed on Render with a persistent disk and live sandbox webhooks
+- [ ] PayPal live mode after partner onboarding, so friends can pay any organizer
+- [ ] A database instead of the JSON file, and Apple Pay on the pay page
 
 ---
 
 ## 🛡️ Security & Privacy Notice
 
-- **Zero hardcoded secrets**: PayPal credentials live only in the untracked `.env` and in Render's dashboard.
-  `.gitignore` excludes `.env` and the live `data/store.json`.
+- **Zero hardcoded secrets**: PayPal credentials and the app key live only in the untracked `.env` and in Render's
+  dashboard. `.gitignore` excludes `.env` and the live `data/store.json`.
+- **Only Little Wallet can make splits or act**: every app route and the live stream need the `x-app-key` header.
 - **Amounts are never trusted from the browser**: the server computes every share and every order amount.
 - **Verified payments only**: captures must match the share's amount and `custom_id`; webhooks must pass PayPal's
   signature check.
-- **Little Fridge never holds money**: payments go straight from the friend to the organizer's PayPal or Venmo.
-- **Share links are random tokens** and show only that friend's items and share, never anyone else's.
+- **Penny never acts alone**: invoices, refunds and payouts run only after you confirm them in the app.
+- **Little Wallet never holds money**: payments go straight from the friend to your PayPal or Venmo.
+- **Share links are random tokens** and show only that friend's share, never anyone else's.
 
 ---
 
 ## 📜 License & Credits
 
 Created with ❤️ by **Jiawen Zhu**.
-- Food art comes from the Little Fridge app's original illustrations.
 - Payments by [PayPal](https://developer.paypal.com) and [Venmo](https://venmo.com) through PayPal Checkout.
+- Hosted on [Render](https://render.com).
 - Distributed under the [MIT License](LICENSE).

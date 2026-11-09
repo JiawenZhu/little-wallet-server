@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: little-fridge-split
+    name: little-wallet
     runtime: node
     # A paid plan: free services can't keep a disk, and friends' links live on it.
     plan: starter

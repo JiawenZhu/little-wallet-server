@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createSplitServer } from "../server/index.js";
 
-const repo = new URL("../", import.meta.url).pathname;
+const repo = decodeURIComponent(new URL("../", import.meta.url).pathname);
 
 test("a paid invoice reaches the phone's live stream, and only the app may listen", async () => {
   const root = await mkdtemp(join(tmpdir(), "lf-events-"));
